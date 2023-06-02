@@ -61,18 +61,13 @@ class Calculator {
     }
 
     compute(prev, cur, operation) {
-        let result = 0;
+        let result;
+        
         prev = Number(prev);
         cur = Number(cur);
-        let curDecimals = ((+cur).toFixed(16)).replace(/^-?\d*\.?|0+$/g, '').length;
-        let prevDecimals = ((+prev).toFixed(16)).replace(/^-?\d*\.?|0+$/g, '').length;
 
-        if (curDecimals !== 0 || prevDecimals !== 0) {
-            prev = prev * (10 ** prevDecimals);
-            cur = cur * (10 ** curDecimals);
-        }
-        console.log(`${prevDecimals} and ${curDecimals}`)
-        this.repeatedNumber = cur;
+
+        console.log(`${prev} and ${cur}`)
 
         switch (operation) {
             case "+":
@@ -85,16 +80,18 @@ class Calculator {
                 result = prev * cur;
                 break;
             case "÷":
-                result = (prev / cur).toFixed(6);
+                result = prev / cur;
                 break;
             case "xe":
                 result = prev ** cur;
                 break;
-            case null:
+            default:
                 result = cur;
                 break;
         }
 
+
+        this.repeatedNumber = cur
         this.updateDisplay(result, true)
         this.clearOnNextNumber = true;
         return result;
