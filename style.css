@@ -137,3 +137,14 @@ sup {
 }
 
 
+/* ATTRIBUTION */
+
+#attribution {
+    margin: 24px 24px;
+    justify-content: flex-end;
+    align-items: flex-end;
+}
+
+#attribution > p {
+    width: 400px;
+}

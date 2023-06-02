@@ -13,6 +13,7 @@ class Calculator {
         this.clearOnNextNumber = false;
         this.operation = "";
         this.lastPressed = null;
+        this.error = false;
     }
 
     appendNum(num) {
@@ -41,9 +42,10 @@ class Calculator {
             this.clearOnNextNumber = false;
         }
 
-        if (+num > 9999999999999999) {
-            displayMain.textContent = "Error!";
+        if (num.toString().length > 16) {
+            displayMain.textContent = "Range Error :(";
             displayWrapper.style.backgroundColor = '#ff6c6c';
+            this.error = true;
             return;
         }
 
@@ -62,61 +64,79 @@ class Calculator {
 
     compute(prev, cur, operation) {
         let result;
-        
-        prev = Number(prev);
-        cur = Number(cur);
+        let prevBig = new Big(prev);
+        let curBig = new Big(cur);
 
 
         console.log(`${prev} and ${cur}`)
 
         switch (operation) {
             case "+":
-                result = prev + cur;
+                result = prevBig.plus(curBig);
                 break;
             case "-":
-                result = prev - cur;
+                result = prevBig.minus(curBig);
                 break;
             case "×":
-                result = prev * cur;
+                result = prevBig.times(curBig);
                 break;
             case "÷":
-                result = prev / cur;
+                result = prevBig.div(curBig);
+                result = result.round(8, Big.roundHalfUp);
                 break;
             case "xe":
-                result = prev ** cur;
+                
+                // Big.js cannot do decimal number exponents, so we must check if the exponent has a decimal
+                // and then use the traditional method if it does
+                if (String(cur).includes('.')) {
+                    result = (+prev) ** +cur;
+                    result = new Big(result).round(8, Big.roundHalfUp)
+                } else {
+                    result = prevBig.pow(+cur);
+                }
                 break;
             default:
-                result = cur;
+                result = curBig;
                 break;
         }
 
 
         this.repeatedNumber = cur
-        this.updateDisplay(result, true)
+        this.updateDisplay(result.toNumber(), true)
         this.clearOnNextNumber = true;
-        return result;
+        return result.toNumber();
     }
 }
 
 
 let calc = new Calculator(displayMain.textContent)
 
+const clearAll = function () {
+    displayMain.textContent = 0;
+    calc = new Calculator(displayMain.textContent);
+    displayWrapper.style.backgroundColor = 'rgb(210, 210, 210)';
+}
 
 
-numberButtons.forEach((button) => {
+numberButtons.forEach((button) => {    
     button.addEventListener('click', (e) => {
+        if (calc.error) clearAll();
         calc.updateDisplay(e.target.querySelector('p').textContent)
         calc.lastPressed = "number";
     });
 })
 
 basicOperations.forEach((button) => {
+    
+    
     button.addEventListener('click', (e) => {
         if (calc.lastPressed === "equals") {
+            if (calc.error) clearAll();
             calc.previousNum = calc.compute(calc.previousNum, 
                 displayMain.textContent, 
                 null);
         } else {
+            if (calc.error) clearAll();
             calc.previousNum = calc.compute(calc.previousNum, 
                 displayMain.textContent, 
                 calc.previousOp);
@@ -127,17 +147,16 @@ basicOperations.forEach((button) => {
     });
 })
 
-clearButton.addEventListener('click', (e) => {
-    displayMain.textContent = 0;
-    calc = new Calculator(displayMain.textContent);
-    displayWrapper.style.backgroundColor = 'rgb(210, 210, 210)';
-})
+clearButton.addEventListener('click', clearAll)
 
 negativeButton.addEventListener('click', (e) => {
+    if (calc.error) clearAll();
     calc.toggleNegative();
 })
 
 equalsButton.addEventListener('click', (e) => {
+    if (calc.error) clearAll();
+    
     if (calc.lastPressed === "equals") {
         calc.previousNum = calc.compute(displayMain.textContent, 
             calc.repeatedNumber, 
